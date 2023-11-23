@@ -53,7 +53,7 @@ export default function ViewUser() {
               </ul>
             </div>
           </div>
-          <Link className="btn btn-primary my-2" to={"/home"}>
+          <Link className="btn btn-primary my-2" to={"/users"}>
             Назад
           </Link>
         </div>

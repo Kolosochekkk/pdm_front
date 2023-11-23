@@ -1,0 +1,25 @@
+
+.img-fixed-size {
+    width: 100px; /* Установите желаемую ширину */
+    height: 100px; /* Установите желаемую высоту */
+    object-fit: cover; /* Этот стиль сохранит соотношение сторон и обрежет изображение, чтобы оно полностью заполнило указанный размер */
+}
+
+.card-title {
+    width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  
+  .detail-card {
+    width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .selected-detail {
+    background-color: #007bff; /* Цвет фона для выделенной детали */
+    color: #ffffff; /* Цвет текста для выделенной детали */
+  }

@@ -13,30 +13,39 @@ export default function EditUser() {
         name: "",
         surname: "",
         phone: "",
-        email: ""
+        email: "",
+        positionId: ""
     });
 
-    const { name, username, email, surname, phone } = user
+    const [positions, setPositions] = useState([]);
+
+    const { name, username, email, surname, phone, positionId } = user;
 
     const onInputChange = (e) => {
-
         setUser({ ...user, [e.target.name]: e.target.value });
-
     };
 
     useEffect(() => {
-        loadUser()
+        loadUser();
+        loadPositions(); // Загрузка списка должностей при монтировании компонента
     }, []);
 
     const onSubmit = async (e) => {
         e.preventDefault();
-        await axios.put(`http://localhost:8080/user/${id}`, user)
-        navigate("/home");
+        console.log("positionId:", user.positionId);
+        await axios.put(`http://localhost:8080/user/${id}?positionId=${user.positionId}`, user);
+        navigate('/users');
     };
+    
 
     const loadUser = async () => {
-        const result = await axios.get(`http://localhost:8080/user/${id}`)
-        setUser(result.data)
+        const result = await axios.get(`http://localhost:8080/user/${id}`);
+        setUser(result.data);
+    };
+
+    const loadPositions = async () => {
+        const result = await axios.get('http://localhost:8080/positions');
+        setPositions(result.data);
     };
 
     return (
@@ -106,11 +115,25 @@ export default function EditUser() {
                                 onChange={(e) => onInputChange(e)}
                             />
                         </div>
+                        <div className="mb-3">
+                            <label htmlFor="Position" className="form-label">Должность</label>
+                            <select
+                                className="form-control"
+                                name="positionId"
+                                value={positionId}
+                                onChange={(e) => onInputChange(e)}
+                            >
+                                <option value='' disabled>Выберите должность</option>
+                                {positions.map(position => (
+                                    <option key={position.id} value={position.id}>{position.name}</option>
+                                ))}
+                            </select>
+                        </div>
                         
                         <button type='submit' className='btn btn-outline-dark'>
                             Изменить
                         </button>
-                        <Link className='btn btn-outline-danger mx-2' to="/home">
+                        <Link className='btn btn-outline-danger mx-2' to="/users">
                             Отмена
                         </Link>
                     </form>

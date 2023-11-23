@@ -16,13 +16,13 @@ function Login() {
       .then((response) => {
         if (response.data.roles.includes('MANAGER')) {
           localStorage.setItem('user', JSON.stringify(response.data));
-          navigate('/home');
+          navigate('/users');
         } else if (response.data.roles.includes('ADMIN')) {
           localStorage.setItem('user', JSON.stringify(response.data));
           navigate('/home');
         } else {
           localStorage.setItem('user', JSON.stringify(response.data));
-          navigate('/home');
+          navigate('/userhome');
         }
       })
       .catch((error) => {

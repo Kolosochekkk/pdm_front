@@ -6,7 +6,7 @@ export default function Navbar() {
         <div><nav className="navbar navbar-expand-lg bg-body-tertiary">
             <div className="container-fluid">
                 <a className="navbar-brand" href="#">PDM System</a>
-                <Link className="btn btn-outline-dark" to="/adduser">Добавить пользователя</Link>
+                {/* <Link className="btn btn-outline-dark" to="/products">Добавить пользователя</Link> */}
             </div>
         </nav>
         </div>
