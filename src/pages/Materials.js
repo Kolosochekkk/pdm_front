@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
-import AdminMenu from './AdminMenu';
+import UserMenu from './UserMenu';
 
 export default function Materials() {
   const [materials, setMaterials] = useState([]);
@@ -22,7 +22,7 @@ export default function Materials() {
 
   return (
     <>
-      <AdminMenu />
+      <UserMenu />
       <div className="table-wrapper">
         <div className="d-flex justify-content-between align-items-center">
           <h4 style={{ margin: 'auto' }}>Список материалов</h4>

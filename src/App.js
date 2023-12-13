@@ -36,6 +36,9 @@ import AdminDocumentations from './pages/AdminDocumentations';
 import Materials from './pages/Materials';
 import AddMaterial from './materials/AddMaterial';
 
+import AdminPlans from './pages/AdminPlans';
+
+
 
 
 function App() {
@@ -71,6 +74,8 @@ function App() {
           <Route exact path="/admindocumentations" element={<AdminDocumentations />} />
           <Route exact path="/materials" element={<Materials />} />
           <Route exact path="/addmaterial" element={<AddMaterial />} />
+          <Route exact path="/adminplans" element={<AdminPlans />} />
+
         </Routes>
 
       </Router>

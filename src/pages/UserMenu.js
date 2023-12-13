@@ -16,6 +16,9 @@ export default function UserMenu() {
           <li>
             <Link to="/plans">Чертежи</Link>
           </li>
+          <li>
+            <Link to="/materials">Материалы</Link>
+          </li>
         </ul>
       </nav>
     </header>

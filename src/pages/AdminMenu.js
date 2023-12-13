@@ -17,7 +17,7 @@ export default function AdminMenu() {
             <Link to="/admindocumentations">Документы</Link>
           </li>
           <li>
-            <Link to="/materials">Материалы</Link>
+            <Link to="/adminplans">Чертежи</Link>
           </li>
         </ul>
       </nav>

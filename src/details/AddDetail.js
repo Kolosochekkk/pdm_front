@@ -15,6 +15,9 @@ export default function AddDetail() {
     const [products, setProducts] = useState([]);
     const [materials, setMaterials] = useState([]);
 
+    const userData = JSON.parse(localStorage.getItem('user'));
+    const uploaderId = userData.id;
+
     useEffect(() => {
         // Загрузка изделий и материалов с сервера при монтировании компонента
         axios.get('http://localhost:8080/products')
@@ -36,7 +39,7 @@ export default function AddDetail() {
         e.preventDefault();
 
         // Передача как productId, так и materialId в теле запроса при создании новой детали
-        await axios.post(`http://localhost:8080/detail/${productId}/${materialId}`, { ...detail });
+        await axios.post(`http://localhost:8080/detail/${productId}/${materialId}/${uploaderId}`, { ...detail });
         navigate('/details'); // Предполагается, что есть маршрут для просмотра деталей
     };
 

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-const AddDocumentation = () => {
+const AddProductDocumentation = () => {
   const navigate = useNavigate();
 
   const [documentation, setDocumentation] = useState({
@@ -16,10 +16,10 @@ const AddDocumentation = () => {
   const uploaderId = userData.id;
 
   const [file, setFile] = useState(null);
-  const [details, setDetails] = useState([]);
+  const [products, setProducts] = useState([]);
   const [users, setUsers] = useState([]);
   const [approverId, setApproverId] = useState('');
-  const [detailId, setDetailId] = useState('');
+  const [productId, setProductId] = useState('');
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -31,17 +31,17 @@ const AddDocumentation = () => {
       }
     };
 
-    const fetchDetails = async () => {
+    const fetchProducts = async () => {
       try {
-        const detailsResponse = await axios.get('http://localhost:8080/details');
-        setDetails(detailsResponse.data);
+        const productsResponse = await axios.get('http://localhost:8080/products');
+        setProducts(productsResponse.data);
       } catch (error) {
-        console.error('Error fetching details:', error);
+        console.error('Error fetching products:', error);
       }
     };
 
     fetchUsers();
-    fetchDetails();
+    fetchProducts();
   }, []); 
 
   const onInputChange = (e) => {
@@ -56,12 +56,12 @@ const AddDocumentation = () => {
     setApproverId(e.target.value);
   };
 
-  const onDetailChange = (e) => {
-    setDetailId(e.target.value);
+  const onProductChange = (e) => {
+    setProductId(e.target.value);
   };
 
   const onCancelClick = () => {
-    navigate(-1); // Используйте navigate(-1) для возврата на предыдущую страницу
+    navigate(-1);
   };
 
   const onSubmit = async (e) => {
@@ -75,15 +75,15 @@ const AddDocumentation = () => {
       formData.append('version', documentation.version);
       formData.append('uploaderId', uploaderId);
       formData.append('approverId', approverId);
-      formData.append('detailId', detailId);
+      formData.append('productId', productId);
 
-      await axios.post(`http://localhost:8080/documentation/${uploaderId}/${approverId}/${detailId}`, formData, {
+      await axios.post(`http://localhost:8080/documentation/${uploaderId}/${approverId}/${productId}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
 
-      navigate(-1); // Используйте navigate(-1) для возврата на предыдущую страницу
+      navigate(-1);
     } catch (error) {
       console.error('Error adding documentation:', error);
     }
@@ -136,22 +136,22 @@ const AddDocumentation = () => {
               />
             </div>
             <div className='mb-3'>
-              <label htmlFor='detailId' className='form-label'>
-                Деталь
+              <label htmlFor='productId' className='form-label'>
+                Изделие
               </label>
               <select
                 className='form-select'
-                name='detailId'
-                value={detailId}
-                onChange={onDetailChange}
+                name='productId'
+                value={productId}
+                onChange={onProductChange}
                 required
               >
                 <option value='' disabled>
-                  Выберите деталь
+                  Выберите изделие
                 </option>
-                {details.map((detail) => (
-                  <option key={detail.id} value={detail.id}>
-                    {detail.name}
+                {products.map((product) => (
+                  <option key={product.id} value={product.id}>
+                    {product.name}
                   </option>
                 ))}
               </select>
@@ -190,4 +190,4 @@ const AddDocumentation = () => {
   );
 };
 
-export default AddDocumentation;
+export default AddProductDocumentation;
