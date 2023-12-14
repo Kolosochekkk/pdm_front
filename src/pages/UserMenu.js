@@ -10,12 +10,12 @@ export default function UserMenu() {
           <li>
             <Link to="/userHome">Изделия</Link>
           </li>
-          <li>
+          {/* <li>
             <Link to="/documentations">Документы</Link>
           </li>
           <li>
             <Link to="/plans">Чертежи</Link>
-          </li>
+          </li> */}
           <li>
             <Link to="/materials">Материалы</Link>
           </li>

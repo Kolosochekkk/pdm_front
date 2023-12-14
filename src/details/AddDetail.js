@@ -10,6 +10,7 @@ export default function AddDetail() {
         designation: '',
         productId: '',
         materialId: '',
+        quantity: '',
     });
 
     const [products, setProducts] = useState([]);
@@ -29,7 +30,7 @@ export default function AddDetail() {
             .catch(error => console.error('Ошибка при загрузке материалов:', error));
     }, []);
 
-    const { name, designation, productId, materialId } = detail;
+    const { name, designation, productId, materialId, quantity } = detail;
 
     const onInputChange = (e) => {
         setDetail({ ...detail, [e.target.name]: e.target.value });
@@ -61,7 +62,7 @@ export default function AddDetail() {
                                 onChange={(e) => onInputChange(e)}
                             />
                         </div>
-
+                        
                         <div className='mb-3'>
                             <label htmlFor='Designation' className='form-label'>Обозначение</label>
                             <input
@@ -88,7 +89,18 @@ export default function AddDetail() {
                                 ))}
                             </select>
                         </div>
-
+                        <div className='mb-3'>
+                            <label htmlFor='Quantity' className='form-label'>Количество</label>
+                            <input
+                                type='number'
+                                className='form-control'
+                                placeholder='Количество'
+                                name='quantity'
+                                value={quantity}
+                                onChange={(e) => onInputChange(e)}
+                                required
+                            />
+                        </div>
                         <div className='mb-3'>
                             <label htmlFor='Material' className='form-label'>Материал</label>
                             <select

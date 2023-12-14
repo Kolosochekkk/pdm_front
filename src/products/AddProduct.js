@@ -1,9 +1,13 @@
 import axios from 'axios';
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { confirmAlert } from 'react-confirm-alert';
+import 'react-confirm-alert/src/react-confirm-alert.css';
+
 
 export default function AddProduct() {
   const navigate = useNavigate();
+  const [setFile] = useState(null);
   const [product, setProduct] = useState({
     name: '',
   });
@@ -30,6 +34,35 @@ export default function AddProduct() {
     navigate('/products');
   };
 
+  const onFileChange = async (e) => {
+    const selectedFile = e.target.files[0];
+  
+    if (selectedFile) {
+      const allowedImageFormats = ['image/png', 'image/jpeg', 'image/bmp', 'image/tiff'];
+  
+      if (!allowedImageFormats.includes(selectedFile.type)) {
+        await new Promise((resolve) => {
+          confirmAlert({
+            title: <h2 style={{ fontSize: '24px' }}>Неверный формат файла</h2>,
+            message: 'Пожалуйста, выберите файл в формате PNG, JPEG, BMP или TIFF.',
+            buttons: [
+              {
+                label: 'OK',
+                onClick: () => {
+                  e.target.value = null;
+                  setFile(null);
+                  resolve();
+                },
+              },
+            ],
+          });
+        });
+      } else {
+        setFile(selectedFile);
+      }
+    }
+  };
+
   return (
     <div className="container">
       <div className="row">
@@ -54,11 +87,11 @@ export default function AddProduct() {
                 Фото продукта
               </label>
               <input
-                type="file"
-                className="form-control"
-                id="photo"
-                name="photo"
-                accept=".jpg,.png,.jpeg"
+                type='file'
+                className='form-control'
+                name='photo'
+                onChange={onFileChange}
+                required
               />
             </div>
             <button type="submit" className="btn btn-outline-primary">

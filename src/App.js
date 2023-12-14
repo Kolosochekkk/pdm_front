@@ -21,6 +21,7 @@ import AddPosition from './positions/AddPosition';
 import EditPosition from './positions/EditPosition';
 
 import AddDocumentation from './documents/AddDocumentation';
+import AddProductDocumentation from './documents/AddProductDocumentation';
 import Documentations from './pages/Documentations';
 import ViewDocumentation from './documents/ViewDocument';
 
@@ -31,6 +32,7 @@ import UserDetails from './pages/UserDetails';
 
 import Plans from './pages/Plans';
 import AddPlan from './plans/AddPlan';
+import AddProductPlan from './plans/AddProductPlan';
 import AdminDocumentations from './pages/AdminDocumentations';
 
 import Materials from './pages/Materials';
@@ -64,6 +66,7 @@ function App() {
           <Route exact path="/editposition/:id" element={<EditPosition/>}/> 
           <Route exact path="/documentations" element={<Documentations/>}/>
           <Route exact path="/adddocumentation" element={<AddDocumentation/>}/> 
+          <Route exact path="/addproductdocumentation" element={<AddProductDocumentation/>}/>
           <Route exact path="/viewdocumentation/:id" element={<ViewDocumentation />} />
           <Route exact path="/details" element={<Details/>}/> 
           <Route exact path="/adddetail" element={<AddDetail/>}/> 
@@ -71,6 +74,7 @@ function App() {
           <Route exact path="/userdetails/:id" element={<UserDetails />} />
           <Route exact path="/plans" element={<Plans />} />
           <Route exact path="/addplan" element={<AddPlan />} />
+          <Route exact path="/addproductplan" element={<AddProductPlan />} />
           <Route exact path="/admindocumentations" element={<AdminDocumentations />} />
           <Route exact path="/materials" element={<Materials />} />
           <Route exact path="/addmaterial" element={<AddMaterial />} />

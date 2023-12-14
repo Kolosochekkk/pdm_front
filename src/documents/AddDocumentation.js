@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { confirmAlert } from 'react-confirm-alert';
+import 'react-confirm-alert/src/react-confirm-alert.css';
 import axios from 'axios';
 
 const AddDocumentation = () => {
@@ -20,6 +22,7 @@ const AddDocumentation = () => {
   const [users, setUsers] = useState([]);
   const [approverId, setApproverId] = useState('');
   const [detailId, setDetailId] = useState('');
+  const [productId] = useState(null);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -42,14 +45,32 @@ const AddDocumentation = () => {
 
     fetchUsers();
     fetchDetails();
-  }, []); 
+  }, []);
 
   const onInputChange = (e) => {
     setDocumentation({ ...documentation, [e.target.name]: e.target.value });
   };
 
   const onFileChange = (e) => {
-    setFile(e.target.files[0]);
+    const selectedFile = e.target.files[0];
+
+    if (selectedFile && !selectedFile.name.endsWith('.pdf')) {
+      confirmAlert({
+        title: <h2 style={{ fontSize: '24px' }}>Неверный формат файла</h2>,
+        message: 'Пожалуйста, выберите файл в формате PDF.',
+        buttons: [
+          {
+            label: 'OK',
+            onClick: () => {
+              e.target.value = null;
+              setFile(null);
+            },
+          },
+        ],
+      });
+    } else {
+      setFile(selectedFile);
+    }
   };
 
   const onApproverChange = (e) => {
@@ -61,7 +82,7 @@ const AddDocumentation = () => {
   };
 
   const onCancelClick = () => {
-    navigate(-1); // Используйте navigate(-1) для возврата на предыдущую страницу
+    navigate(-1);
   };
 
   const onSubmit = async (e) => {
@@ -76,14 +97,15 @@ const AddDocumentation = () => {
       formData.append('uploaderId', uploaderId);
       formData.append('approverId', approverId);
       formData.append('detailId', detailId);
+      formData.append('productId', null);
 
-      await axios.post(`http://localhost:8080/documentation/${uploaderId}/${approverId}/${detailId}`, formData, {
+      await axios.post(`http://localhost:8080/documentation/${uploaderId}/${approverId}/${productId}/${detailId}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
 
-      navigate(-1); // Используйте navigate(-1) для возврата на предыдущую страницу
+      navigate(-1);
     } catch (error) {
       console.error('Error adding documentation:', error);
     }
@@ -95,6 +117,11 @@ const AddDocumentation = () => {
         <div className='col-md-6 offset-md-3 border rounded p-4 mt-2'>
           <h4 className='text-center m-4'>Добавление документа</h4>
           <form onSubmit={onSubmit} encType="multipart/form-data">
+            {file && !file.name.endsWith('.pdf') && (
+              <div className="alert alert-danger mt-2">
+                Пожалуйста, выберите файл в формате PDF.
+              </div>
+            )}
             <div className='mb-3'>
               <label htmlFor='title' className='form-label'>
                 Заголовок

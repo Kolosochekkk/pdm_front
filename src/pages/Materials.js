@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
+import { confirmAlert } from 'react-confirm-alert';
+import 'react-confirm-alert/src/react-confirm-alert.css';
 import UserMenu from './UserMenu';
 
 export default function Materials() {
@@ -13,6 +15,23 @@ export default function Materials() {
   const loadMaterials = async () => {
     const result = await axios.get("http://localhost:8080/materials");
     setMaterials(result.data);
+  };
+
+  const confirmDeleteMaterial = (id) => {
+    confirmAlert({
+      title: <h2 style={{ fontSize: '24px' }}>Подтверждение удаления</h2>,
+      message: 'Вы уверены, что хотите удалить этот материал?',
+      buttons: [
+        {
+          label: <span style={{ fontSize: '14px' }}>Да</span>,
+          onClick: () => deleteMaterial(id),
+        },
+        {
+          label: <span style={{ fontSize: '14px' }}>Нет</span>,
+          onClick: () => {},
+        },
+      ],
+    });
   };
 
   const deleteMaterial = async (id) => {
@@ -61,7 +80,7 @@ export default function Materials() {
                     </Link>
                     <button
                       className="btn btn-danger mx-2"
-                      onClick={() => deleteMaterial(material.id)}
+                      onClick={() => confirmDeleteMaterial(material.id)}
                     >
                       Удалить
                     </button>

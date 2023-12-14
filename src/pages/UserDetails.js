@@ -4,6 +4,10 @@ import { useParams, Link } from 'react-router-dom';
 import UserMenu from './UserMenu';
 import '../styles/Details.css';
 import 'jspdf-autotable';
+import { confirmAlert } from 'react-confirm-alert';
+import 'react-confirm-alert/src/react-confirm-alert.css';
+
+
 
 const UserDetails = () => {
   const [product, setProduct] = useState({});
@@ -16,10 +20,20 @@ const UserDetails = () => {
   const { id } = useParams();
   const [searchTerm, setSearchTerm] = useState('');
   const [showDocuments, setShowDocuments] = useState(false);
+  const [showPlans, setShowPlans] = useState(false);
   const [showSpecificationTable, setShowSpecificationTable] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [showAddDocumentButton, setShowAddDocumentButton] = useState(false);
+  const [showAddPlanButton, setShowAddPlanButton] = useState(false);
+  const [showAddProductDocumentButton, setShowAddProductDocumentButton] = useState(false);
+  const [showAddProductPlanButton, setShowAddProductPlanButton] = useState(false);
+  const [showDetailsSpecificationTable, setShowDetailsSpecificationTable] = useState(false);
+  const [comments, setComments] = useState([]);
+  const [isCommentModalVisible, setCommentModalVisible] = useState(false);
+
+  const userData = JSON.parse(localStorage.getItem('user'));
+  const uploaderId = userData.id;
 
   useEffect(() => {
     const loadProductAndDetails = async () => {
@@ -27,6 +41,8 @@ const UserDetails = () => {
       setProduct(productResult.data);
       const detailsResult = await axios.get(`http://localhost:8080/details/product/${id}`);
       setDetails(detailsResult.data);
+      setSelectedProduct(productResult.data.id);
+      setShowDocuments(true);
     };
 
     loadProductAndDetails();
@@ -45,7 +61,9 @@ const UserDetails = () => {
       console.error('Error fetching documentations:', error);
     }
     setShowDocuments(true);
+    setShowPlans(false);
     setShowSpecificationTable(false);
+    setShowDetailsSpecificationTable(false);
     setShowAddDocumentButton(true);
   };
 
@@ -58,8 +76,10 @@ const UserDetails = () => {
       console.error('Error fetching documentations:', error);
     }
     setShowDocuments(true);
+    setShowPlans(false);
     setShowSpecificationTable(false);
-    setShowAddDocumentButton(true);
+    setShowDetailsSpecificationTable(false);
+    setShowAddProductDocumentButton(true);
   };
 
   const handleDocumentsClick = async () => {
@@ -68,7 +88,7 @@ const UserDetails = () => {
       setDocuments(response.data);
       setShowDocuments(true);
       setShowSpecificationTable(false);
-      setShowAddDocumentButton(true);
+      setShowDetailsSpecificationTable(false);
     } catch (error) {
       console.error('Error fetching documentations:', error);
     }
@@ -80,7 +100,7 @@ const UserDetails = () => {
       setDocuments(response.data);
       setShowDocuments(true);
       setShowSpecificationTable(false);
-      setShowAddDocumentButton(true);
+      setShowDetailsSpecificationTable(false);
     } catch (error) {
       console.error('Error fetching documentations:', error);
     }
@@ -91,7 +111,10 @@ const UserDetails = () => {
       const response = await axios.get(`http://localhost:8080/plans/detail/${selectedDetail}`);
       setPlans(response.data);
       setShowDocuments(false);
+      setShowPlans(true);
       setShowSpecificationTable(false);
+      setShowDetailsSpecificationTable(false);
+      setShowAddPlanButton(true);
     } catch (error) {
       console.error('Error fetching plans:', error);
     }
@@ -102,7 +125,10 @@ const UserDetails = () => {
       const response = await axios.get(`http://localhost:8080/plans/product/${selectedProduct}`);
       setPlans(response.data);
       setShowDocuments(false);
+      setShowPlans(true);
       setShowSpecificationTable(false);
+      setShowDetailsSpecificationTable(false);
+      setShowAddProductPlanButton(true);
     } catch (error) {
       console.error('Error fetching plans:', error);
     }
@@ -115,13 +141,13 @@ const UserDetails = () => {
     } catch (error) {
       console.error('Error fetching materials:', error);
     }
-  
+    setShowPlans(false);
     setShowDocuments(false);
     setShowSpecificationTable(true);
+    setShowDetailsSpecificationTable(false);
     setSelectedDetail(null);
-    setShowAddDocumentButton(false);
   };
-  
+
 
   const handleDownloadPDF = async () => {
     try {
@@ -133,6 +159,24 @@ const UserDetails = () => {
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', 'materials.pdf');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+    }
+  };
+
+  const handleDownloadDetailsPDF = async () => {
+    try {
+      const response = await axios.get(`http://localhost:8080/details/product/download/${id}`, {
+        responseType: 'blob',
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'details.pdf');
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -180,33 +224,165 @@ const UserDetails = () => {
     }
   };
 
-  const deleteDocument = async (documentId) => {
+  const deleteDetailDocument = (documentId) => {
+    confirmAlert({
+      title: <h2 style={{ fontSize: '24px' }}>Подтверждение удаления</h2>,
+      message: (
+        <div>
+          <p>Вы уверены, что хотите удалить этот документ?</p>
+          <small>Это действие нельзя будет отменить.</small>
+        </div>
+      ),
+      buttons: [
+        {
+          label: <span style={{ fontSize: '14px' }}>Да</span>,
+          onClick: async () => {
+            try {
+              await axios.delete(`http://localhost:8080/documentation/${documentId}`);
+              handleDocumentsClick();
+            } catch (error) {
+              console.error('Ошибка удаления документа:', error);
+            }
+          },
+        },
+        {
+          label: <span style={{ fontSize: '14px' }}>Нет</span>,
+          onClick: () => { },
+        },
+      ],
+    });
+  };
+
+  const deleteProductDocument = (documentId) => {
+    confirmAlert({
+      title: <h2 style={{ fontSize: '24px' }}>Подтверждение удаления</h2>,
+      message: (
+        <div>
+          <p>Вы уверены, что хотите удалить этот документ?</p>
+          <small>Это действие нельзя будет отменить.</small>
+        </div>
+      ),
+      buttons: [
+        {
+          label: <span style={{ fontSize: '14px' }}>Да</span>,
+          onClick: async () => {
+            try {
+              await axios.delete(`http://localhost:8080/documentation/${documentId}`);
+              handleProductDocumentsClick();
+            } catch (error) {
+              console.error('Ошибка удаления документа:', error);
+            }
+          },
+        },
+        {
+          label: <span style={{ fontSize: '14px' }}>Нет</span>,
+          onClick: () => { },
+        },
+      ],
+    });
+  };
+
+  const deleteDetailPlan = (planId) => {
+    confirmAlert({
+      title: <h2 style={{ fontSize: '24px' }}>Подтверждение удаления</h2>,
+      message: (
+        <div>
+          <p>Вы уверены, что хотите удалить этот чертеж?</p>
+          <small>Это действие нельзя будет отменить.</small>
+        </div>
+      ),
+      buttons: [
+        {
+          label: <span style={{ fontSize: '14px' }}>Да</span>,
+          onClick: async () => {
+            try {
+              await axios.delete(`http://localhost:8080/plan/${planId}`);
+              handleDrawingsClick();
+            } catch (error) {
+              console.error('Ошибка удаления чертежа:', error);
+            }
+          },
+        },
+        {
+          label: <span style={{ fontSize: '14px' }}>Нет</span>,
+          onClick: () => { },
+        },
+      ],
+    });
+  };
+
+  const deleteProductPlan = (planId) => {
+    confirmAlert({
+      title: <h2 style={{ fontSize: '24px' }}>Подтверждение удаления</h2>,
+      message: (
+        <div>
+          <p>Вы уверены, что хотите удалить этот чертеж?</p>
+          <small>Это действие нельзя будет отменить.</small>
+        </div>
+      ),
+      buttons: [
+        {
+          label: <span style={{ fontSize: '14px' }}>Да</span>,
+          onClick: async () => {
+            try {
+              await axios.delete(`http://localhost:8080/plan/${planId}`);
+              handleProductDrawingsClick();
+            } catch (error) {
+              console.error('Ошибка удаления чертежа:', error);
+            }
+          },
+        },
+        {
+          label: <span style={{ fontSize: '14px' }}>Нет</span>,
+          onClick: () => { },
+        },
+      ],
+    });
+  };
+
+
+  const handleDetailsSpecificationClick = async () => {
     try {
-      await axios.delete(`http://localhost:8080/documentation/${documentId}`);
-      handleDocumentsClick();
+      setShowDetailsSpecificationTable(true);
     } catch (error) {
-      console.error('Error deleting document:', error);
+      console.error('Error fetching details specification:', error);
     }
+  };
+
+  const handleOpenCommentModal = async (documentId) => {
+    try {
+      const response = await axios.get(`http://localhost:8080/doccomments/document/${documentId}`);
+      setComments(response.data);
+      setCommentModalVisible(true);
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+    }
+  };
+
+  // Метод для закрытия модального окна с комментариями
+  const handleCloseCommentModal = () => {
+    setCommentModalVisible(false);
+    setComments([]); 
   };
 
   return (
     <>
       <UserMenu />
-      <div className="container-fluid">
+      <div className="container-fluid ">
         <div className="row" style={{ padding: '10px' }}>
-          <div className="col-md-3">
+          <div className="col-md-3 separator">
             <input
               className="form-control mb-2"
               type="search"
-              placeholder="Поиск"
+              placeholder="Поиск по названию детали"
               aria-label="Search"
               value={searchTerm}
               onChange={handleSearchChange}
               style={{ fontSize: '12px' }}
             />
-            <h6 style={{ textAlign: 'left' }}>Изделие</h6>
+            <h5 style={{ textAlign: 'left' }}>Изделие</h5>
             <h6
-              className={`detail-item ${selectedProduct === product.id ? 'selected-detail' : ''}`}
+              className={` product-name ${selectedProduct === product.id ? 'selected-detail' : ''}`}
               onClick={() => {
                 handleProductClick(product.id);
                 setSelectedDetail(null);
@@ -214,20 +390,33 @@ const UserDetails = () => {
             >
               {product.name}
             </h6>
-            <h6 style={{ textAlign: 'left' }}>Детали</h6>
-            {filteredDetails.map((detail, index) => (
-              <div
-                key={index}
-                className={`detail-item ${selectedDetail === detail.id ? 'selected-detail' : ''}`}
-                onClick={() => {
-                  handleDetailClick(detail.id);
-                  setSelectedProduct(null);
-                }}
-              >
-                {detail.name}
+            <h5 style={{ textAlign: 'left' }}>Детали</h5>
+
+            {filteredDetails.length > 0 && (
+              <div className="details-list">
+                <div className="detail-item header">
+                  <span>Наименование</span>
+                  <span>Обозначение</span>
+                  <span>Количество</span>
+                </div>
+                {filteredDetails.map((detail, index) => (
+                  <div
+                    key={index}
+                    className={`detail-item ${selectedDetail === detail.id ? 'selected-detail' : ''}`}
+                    onClick={() => {
+                      handleDetailClick(detail.id);
+                      setSelectedProduct(null);
+                    }}
+                  >
+                    <span>{detail.name}</span>
+                    <span>{detail.designation}</span>
+                    <span>{detail.quantity}</span>
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
           </div>
+
           <div className="col-md-9" style={{ padding: '10px' }}>
             <div className="d-flex mb-3">
               {selectedDetail && (
@@ -235,14 +424,20 @@ const UserDetails = () => {
                   <button
                     type="button"
                     className={`btn btn-secondary mx-1 ${showDocuments ? 'active' : ''}`}
-                    onClick={handleDocumentsClick}
+                    onClick={() => {
+                      handleDocumentsClick();
+                      setShowPlans(false);
+                    }}
                   >
                     Документы
                   </button>
                   <button
                     type="button"
-                    className={`btn btn-secondary mx-1 ${!showDocuments ? 'active' : ''}`}
-                    onClick={handleDrawingsClick}
+                    className={`btn btn-secondary mx-1 ${showPlans ? 'active' : ''}`}
+                    onClick={() => {
+                      handleDrawingsClick();
+                      setShowDocuments(false);
+                    }}
                   >
                     Чертежи
                   </button>
@@ -253,35 +448,49 @@ const UserDetails = () => {
                   <button
                     type="button"
                     className={`btn btn-secondary mx-1 ${showDocuments ? 'active' : ''}`}
-                    onClick={handleProductDocumentsClick}
+                    onClick={() => {
+                      handleProductDocumentsClick();
+                      setShowPlans(false);
+                    }}
                   >
                     Документы
                   </button>
                   <button
                     type="button"
-                    className={`btn btn-secondary mx-1 ${!showDocuments ? 'active' : ''}`}
-                    onClick={handleProductDrawingsClick}
+                    className={`btn btn-secondary mx-1 ${showPlans ? 'active' : ''}`}
+                    onClick={() => {
+                      handleProductDrawingsClick();
+                      setShowDocuments(false);
+                    }}
                   >
                     Чертежи
                   </button>
                   <button
                     type="button"
-                    className={`btn btn-secondary mx-1 ${!showSpecificationTable ? 'active' : ''}`}
+                    className={`btn btn-secondary mx-1 ${showSpecificationTable ? 'active' : ''}`}
                     onClick={() => {
-                      handleSpecificationClick(); // <- Add parentheses to invoke the function
+                      handleSpecificationClick();
                       setShowDocuments(false);
+                      setShowPlans(false);
                     }}
                   >
-                    Спецификации
+                    Спецификация материалов
+                  </button>
+                  <button
+                    type="button"
+                    className={`btn btn-secondary mx-1 ${showDetailsSpecificationTable ? 'active' : ''}`}
+                    onClick={() => {
+                      handleDetailsSpecificationClick();
+                      setShowSpecificationTable(false);
+                      setShowDocuments(false);
+                      setShowPlans(false);
+                    }}>
+                    Спецификация деталей
                   </button>
 
                 </>
               )}
-              {/* {showSpecificationTable && (
-                <button type="button" className={`btn btn-secondary mx-1`} onClick={handleSpecificationClick}>
-                  Спецификации
-                </button>
-              )} */}
+
             </div>
             {showDocuments && selectedDetail && (
               <table className="table">
@@ -291,6 +500,8 @@ const UserDetails = () => {
                     <th scope="col">Заголовок</th>
                     <th scope="col">Статус</th>
                     <th scope="col">Версия</th>
+                    <th scope="col">Загрузил</th>
+                    <th scope="col">Согласует</th>
                     <th scope="col">Действия</th>
                   </tr>
                 </thead>
@@ -301,16 +512,30 @@ const UserDetails = () => {
                       <td>{document.title}</td>
                       <td>{document.status}</td>
                       <td>{document.version ? document.version : 'No detail'}</td>
+                      <td>{document.uploader.surname}</td>
+                      <td>{document.approver.surname}</td>
                       <td>
+                        {document.status === 'На доработку' && (
+                          <button
+                            className="btn btn-info mx-2"
+                            onClick={() => handleOpenCommentModal(document.id)}
+                          >
+                            Комментарий
+                          </button>
+                        )}
                         <Link className="btn btn-primary mx-2" to={`/viewdocumentation/${document.id}`}>
                           Просмотр
                         </Link>
                         <button className="btn btn-success mx-2" onClick={() => downloadDocument(document)}>
                           Скачать
                         </button>
-                        <button className="btn btn-danger mx-2" onClick={() => deleteDocument(document.id)}>
-                          Удалить
-                        </button>
+                        {document.uploader.id === uploaderId && (
+                          <>
+                            <button className="btn btn-danger mx-2" onClick={() => deleteDetailDocument(document.id)}>
+                              Удалить
+                            </button>
+                          </>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -325,6 +550,8 @@ const UserDetails = () => {
                     <th scope="col">Заголовок</th>
                     <th scope="col">Статус</th>
                     <th scope="col">Версия</th>
+                    <th scope="col">Загрузил</th>
+                    <th scope="col">Согласует</th>
                     <th scope="col">Действия</th>
                   </tr>
                 </thead>
@@ -335,6 +562,8 @@ const UserDetails = () => {
                       <td>{document.title}</td>
                       <td>{document.status}</td>
                       <td>{document.version ? document.version : 'No detail'}</td>
+                      <td>{document.uploader.surname}</td>
+                      <td>{document.approver.surname}</td>
                       <td>
                         <Link className="btn btn-primary mx-2" to={`/viewdocumentation/${document.id}`}>
                           Просмотр
@@ -342,16 +571,20 @@ const UserDetails = () => {
                         <button className="btn btn-success mx-2" onClick={() => downloadDocument(document)}>
                           Скачать
                         </button>
-                        <button className="btn btn-danger mx-2" onClick={() => deleteDocument(document.id)}>
-                          Удалить
-                        </button>
+                        {document.uploader.id === uploaderId && (
+                          <>
+                            <button className="btn btn-danger mx-2" onClick={() => deleteProductDocument(document.id)}>
+                              Удалить
+                            </button>
+                          </>
+                        )}
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             )}
-            {!showDocuments && selectedDetail && (
+            {showPlans && selectedDetail && (
               <table className="table">
                 <thead>
                   <tr>
@@ -359,6 +592,8 @@ const UserDetails = () => {
                     <th scope="col">Заголовок</th>
                     <th scope="col">Статус</th>
                     <th scope="col">Версия</th>
+                    <th scope="col">Загрузил</th>
+                    <th scope="col">Согласует</th>
                     <th scope="col">Действия</th>
                   </tr>
                 </thead>
@@ -369,17 +604,26 @@ const UserDetails = () => {
                       <td>{plan.title}</td>
                       <td>{plan.status}</td>
                       <td>{plan.version ? plan.version : 'No detail'}</td>
+                      <td>{plan.uploader.surname}</td>
+                      <td>{plan.approver.surname}</td>
                       <td>
                         <button className="btn btn-primary mx-2" onClick={() => viewPlan(plan)}>
                           Просмотр
                         </button>
+                        {plan.uploader.id === uploaderId && (
+                          <>
+                            <button className="btn btn-danger mx-2" onClick={() => deleteDetailPlan(plan.id)}>
+                              Удалить
+                            </button>
+                          </>
+                        )}
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             )}
-            {!showDocuments && selectedProduct && (
+            {showPlans && selectedProduct && (
               <table className="table">
                 <thead>
                   <tr>
@@ -387,6 +631,8 @@ const UserDetails = () => {
                     <th scope="col">Заголовок</th>
                     <th scope="col">Статус</th>
                     <th scope="col">Версия</th>
+                    <th scope="col">Загрузил</th>
+                    <th scope="col">Согласует</th>
                     <th scope="col">Действия</th>
                   </tr>
                 </thead>
@@ -397,10 +643,19 @@ const UserDetails = () => {
                       <td>{plan.title}</td>
                       <td>{plan.status}</td>
                       <td>{plan.version ? plan.version : 'No detail'}</td>
+                      <td>{plan.uploader.surname}</td>
+                      <td>{plan.approver.surname}</td>
                       <td>
                         <button className="btn btn-primary mx-2" onClick={() => viewPlan(plan)}>
                           Просмотр
                         </button>
+                        {plan.uploader.id === uploaderId && (
+                          <>
+                            <button className="btn btn-danger mx-2" onClick={() => deleteProductPlan(plan.id)}>
+                              Удалить
+                            </button>
+                          </>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -408,7 +663,7 @@ const UserDetails = () => {
               </table>
             )}
 
-            {!showDocuments && showSpecificationTable &&(
+            {showSpecificationTable && (
               <div>
                 <table id="specification-table" className="table">
                   <thead>
@@ -437,12 +692,73 @@ const UserDetails = () => {
                 </button>
               </div>
             )}
+
+            {showDetailsSpecificationTable && (
+              <div>
+                <table id="specification-table" className="table">
+                  <thead>
+                    <tr>
+                      <th scope="col">#</th>
+                      <th scope="col">Наименование</th>
+                      <th scope="col">Обозначение</th>
+                      <th scope="col">Количество</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {details.map((detail, index) => (
+                      <tr key={index}>
+                        <th scope="row">{index + 1}</th>
+                        <td>{detail.name}</td>
+                        <td>{detail.designation}</td>
+                        <td>{detail.quantity}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <button type="button" className="btn btn-primary" onClick={handleDownloadDetailsPDF}>
+                  Скачать
+                </button>
+              </div>
+            )}
+
+            {isCommentModalVisible && (
+              <div className="modal">
+                <div className="modal-content">
+                  <span className="close" onClick={handleCloseCommentModal}>
+                    &times;
+                  </span>
+                  <h2>Комментарии</h2>
+                  <ul>
+                    {comments.map((comment, index) => (
+                      <li key={index}>{comment.comm}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            )}
+
             {modalVisible && selectedPlan && <ImageViewerModal plan={selectedPlan} onClose={() => setModalVisible(false)} />}
-            {showAddDocumentButton && (
+            {showAddDocumentButton && showDocuments && selectedDetail && (
               <Link className="btn" style={{ backgroundColor: 'black', color: 'white' }} to={`/adddocumentation`}>
                 Добавить документ
               </Link>
             )}
+            {showAddPlanButton && showPlans && selectedDetail && (
+              <Link className="btn" style={{ backgroundColor: 'black', color: 'white' }} to={`/addplan`}>
+                Добавить чертеж
+              </Link>
+            )}
+            {showAddProductDocumentButton && showDocuments && selectedProduct && (
+              <Link className="btn" style={{ backgroundColor: 'black', color: 'white' }} to={`/addproductdocumentation`}>
+                Добавить документ
+              </Link>
+            )}
+            {showAddProductPlanButton && showPlans && selectedProduct && (
+              <Link className="btn" style={{ backgroundColor: 'black', color: 'white' }} to={`/addproductplan`}>
+                Добавить чертеж
+              </Link>
+            )}
+
           </div>
         </div>
       </div>

@@ -23,3 +23,42 @@
     background-color: #007bff; /* Цвет фона для выделенной детали */
     color: #ffffff; /* Цвет текста для выделенной детали */
   }
+
+/* Новый стиль для разделительной линии */
+.separator-container {
+  display: flex; /* Используем флексбокс */
+}
+
+.separator {
+  border-right: 1px solid #ccc;
+  flex: 1; /* Занимает все доступное пространство */
+  padding-right: 10px; /* Отступ справа (по вашему усмотрению) */
+}
+
+
+/* Отступ между левой и правой колонкой */
+.container-fluid {
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+
+.details-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px; /* Отступ между деталями */
+}
+
+.detail-item span {
+  flex: 1;
+}
+
+.product-name {
+  font-weight: normal; /* или используйте font-weight: normal!important; если требуется переопределение стилей */
+  /* Другие стили по вашему усмотрению */
+}

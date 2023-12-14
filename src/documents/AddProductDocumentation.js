@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { confirmAlert } from 'react-confirm-alert';
+import 'react-confirm-alert/src/react-confirm-alert.css';
 
 const AddProductDocumentation = () => {
   const navigate = useNavigate();
@@ -20,6 +22,7 @@ const AddProductDocumentation = () => {
   const [users, setUsers] = useState([]);
   const [approverId, setApproverId] = useState('');
   const [productId, setProductId] = useState('');
+  const [detailId] = useState(null);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -49,7 +52,25 @@ const AddProductDocumentation = () => {
   };
 
   const onFileChange = (e) => {
-    setFile(e.target.files[0]);
+    const selectedFile = e.target.files[0];
+
+    if (selectedFile && !selectedFile.name.endsWith('.pdf')) {
+      confirmAlert({
+        title: <h2 style={{ fontSize: '24px' }}>Неверный формат файла</h2>,
+        message: 'Пожалуйста, выберите файл в формате PDF.',
+        buttons: [
+          {
+            label: 'OK',
+            onClick: () => {
+              e.target.value = null;
+              setFile(null);
+            },
+          },
+        ],
+      });
+    } else {
+      setFile(selectedFile);
+    }
   };
 
   const onApproverChange = (e) => {
@@ -76,8 +97,9 @@ const AddProductDocumentation = () => {
       formData.append('uploaderId', uploaderId);
       formData.append('approverId', approverId);
       formData.append('productId', productId);
-
-      await axios.post(`http://localhost:8080/documentation/${uploaderId}/${approverId}/${productId}`, formData, {
+      formData.append('detailId', null);
+      
+      await axios.post(`http://localhost:8080/documentation/${uploaderId}/${approverId}/${productId}/${detailId}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

@@ -4,13 +4,12 @@ import axios from 'axios';
 import { confirmAlert } from 'react-confirm-alert';
 import 'react-confirm-alert/src/react-confirm-alert.css';
 
-
 const AddPlan = () => {
   const navigate = useNavigate();
 
   const [plan, setPlan] = useState({
     title: '',
-    planPath: '',
+    planPath: '', // No longer needed
     status: 'На согласовании',
     version: 1
   });
@@ -19,11 +18,12 @@ const AddPlan = () => {
   const uploaderId = userData.id;
 
   const [file, setFile] = useState(null);
-  const [details, setDetails] = useState([]);
+  const [products, setProducts] = useState([]);
   const [users, setUsers] = useState([]);
   const [approverId, setApproverId] = useState('');
-  const [detailId, setDetailId] = useState('');
-  const [productId] = useState(null);
+  const [detailId] = useState(null);
+  const [productId, setProductId] = useState('');
+
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -36,18 +36,18 @@ const AddPlan = () => {
       }
     };
 
-    const fetchDetails = async () => {
+    const fetchProducts = async () => {
       try {
-        const detailsResponse = await axios.get('http://localhost:8080/details');
-        setDetails(detailsResponse.data);
+        const productsResponse = await axios.get('http://localhost:8080/products');
+        setProducts(productsResponse.data);
       } catch (error) {
-        console.error('Error fetching details:', error);
+        console.error('Error fetching products:', error);
       }
     };
 
     fetchUsers();
-    fetchDetails();
-  }, []);
+    fetchProducts();
+  }, []); 
 
   const onInputChange = (e) => {
     setPlan({ ...plan, [e.target.name]: e.target.value });
@@ -81,13 +81,13 @@ const AddPlan = () => {
       }
     }
   };
-  
+
   const onApproverChange = (e) => {
     setApproverId(e.target.value);
   };
 
-  const onDetailChange = (e) => {
-    setDetailId(e.target.value);
+  const onProductChange = (e) => {
+    setProductId(e.target.value);
   };
 
   const onCancelClick = () => {
@@ -105,7 +105,7 @@ const AddPlan = () => {
       formData.append('version', plan.version);
       formData.append('uploaderId', uploaderId);
       formData.append('approverId', approverId);
-      formData.append('detailId', detailId);
+      formData.append('productId', productId);
 
       await axios.post(`http://localhost:8080/plan/${uploaderId}/${approverId}/${productId}/${detailId}`, formData, {
         headers: {
@@ -166,22 +166,22 @@ const AddPlan = () => {
               />
             </div>
             <div className='mb-3'>
-              <label htmlFor='detailId' className='form-label'>
-                Деталь
+              <label htmlFor='productId' className='form-label'>
+                Изделие
               </label>
               <select
                 className='form-select'
-                name='detailId'
-                value={detailId}
-                onChange={onDetailChange}
+                name='productId'
+                value={productId}
+                onChange={onProductChange}
                 required
               >
                 <option value='' disabled>
-                  Выберите деталь
+                  Выберите изделие
                 </option>
-                {details.map((detail) => (
-                  <option key={detail.id} value={detail.id}>
-                    {detail.name}
+                {products.map((product) => (
+                  <option key={product.id} value={product.id}>
+                    {product.name}
                   </option>
                 ))}
               </select>

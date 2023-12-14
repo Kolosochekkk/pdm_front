@@ -40,6 +40,7 @@ export default function Details() {
                 <th scope="col">Название</th>
                 <th scope="col">Обозначение</th>
                 <th scope="col">Изделие</th>
+                <th scope="col">Количество</th>
                 <th scope="col">Материал</th>
                 <th scope="col">Действие</th>
               </tr>
@@ -51,6 +52,7 @@ export default function Details() {
                   <td>{detail.name}</td>
                   <td>{detail.designation}</td>
                   <td>{detail.product.name}</td>
+                  <td>{detail.quantity}</td>
                   <td>{detail.material.name}</td>
                   <td>
                     <Link
