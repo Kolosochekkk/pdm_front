@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import AdminMenu from './AdminMenu';
-import { Link } from 'react-router-dom';
 import { Modal, Button, Form } from 'react-bootstrap';
 
 const AdminPlans = () => {
@@ -68,6 +67,9 @@ const AdminPlans = () => {
             setPlans(updatedPlans);
 
             handleModalClose();
+
+            const updatedPendingPlans = pendingPlans.filter(plan => plan.id !== updatedPlan.id);
+            setPendingPlans(updatedPendingPlans);
         } catch (error) {
             console.error('Ошибка при обновлении статуса документации или отправке комментария:', error);
         }

@@ -20,9 +20,33 @@
     overflow: auto;
 }
 
+.modal-content1 {
+    position: relative;
+    background-color: #fff;
+    padding: 0;
+    width: 500px;
+    height: 400px;
+    overflow: auto;
+}
+
 .modal-image {
     width: 90%;
     height: 90%;
+}
+
+.close1 {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 20px;
+    cursor: pointer;
+    color: #fff; /* Устанавливаем цвет текста кнопки в белый */
+    background-color: red; /* Устанавливаем красный цвет фона кнопки */
+    width: 20px; /* Устанавливаем ширину кнопки */
+    height: 20px; /* Устанавливаем высоту кнопки */
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .close {

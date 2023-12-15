@@ -1,16 +1,19 @@
 import axios from 'axios';
 import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 
 export default function UpdateDetail() {
-    let navigate = useNavigate();
+    //let navigate = useNavigate();
+    const navigate = useNavigate();
     const { id } = useParams();
 
     const [detail, setDetail] = useState({
         name: '',
         designation: '',
         productId: '',
-        materialId: ''
+        materialId: '',
+        quantity: '',
+        materialQuantity: '',
     });
 
     const [products, setProducts] = useState([]);
@@ -33,7 +36,7 @@ export default function UpdateDetail() {
             .catch(error => console.error('Ошибка при получении списка материалов:', error));
     }, [id]);
 
-    const { name, designation, productId, materialId } = detail;
+    const { name, designation, productId, materialId, quantity, materialQuantity } = detail;
 
     const onInputChange = (e) => {
         setDetail({ ...detail, [e.target.name]: e.target.value });
@@ -47,10 +50,16 @@ export default function UpdateDetail() {
             name,
             designation,
             product: { id: productId },
-            material: { id: materialId }
+            material: { id: materialId },
+            quantity,
+            materialQuantity
         });
-        navigate('/details');
+        navigate(-1);
     };
+
+    const onCancelClick = () => {
+        navigate(-1);
+      };
 
     return (
         <div className='container'>
@@ -83,7 +92,7 @@ export default function UpdateDetail() {
                             />
                         </div>
 
-                        <div className='mb-3'>
+                        {/* <div className='mb-3'>
                             <label htmlFor='Product' className='form-label'>Изделие</label>
                             <select
                                 className='form-control'
@@ -96,9 +105,19 @@ export default function UpdateDetail() {
                                     <option key={product.id} value={product.id}>{product.name}</option>
                                 ))}
                             </select>
-                        </div>
-
+                        </div> */}
                         <div className='mb-3'>
+                            <label htmlFor='Quantity' className='form-label'>Количество</label>
+                            <input
+                                type='text'
+                                className='form-control'
+                                placeholder='Количество'
+                                name='quantity'
+                                value={quantity}
+                                onChange={(e) => onInputChange(e)}
+                            />
+                        </div>
+                        {/* <div className='mb-3'>
                             <label htmlFor='Material' className='form-label'>Материал</label>
                             <select
                                 className='form-control'
@@ -111,14 +130,24 @@ export default function UpdateDetail() {
                                     <option key={material.id} value={material.id}>{material.name}</option>
                                 ))}
                             </select>
+                        </div> */}
+                        <div className='mb-3'>
+                            <label htmlFor='MaterialQuantity' className='form-label'>Количество материала</label>
+                            <input
+                                type='text'
+                                className='form-control'
+                                placeholder='Количество материала'
+                                name='materialQuantity'
+                                value={materialQuantity}
+                                onChange={(e) => onInputChange(e)}
+                            />
                         </div>
-
                         <button type='submit' className='btn btn-outline-dark'>
                             Изменить
                         </button>
-                        <Link className='btn btn-outline-danger mx-2' to='/details'>
+                        <button type='button' className='btn btn-outline-danger mx-2' onClick={onCancelClick}>
                             Отмена
-                        </Link>
+                        </button>
                     </form>
                 </div>
             </div>

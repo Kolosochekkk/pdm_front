@@ -32,16 +32,14 @@
 .separator {
   border-right: 1px solid #ccc;
   flex: 1; /* Занимает все доступное пространство */
-  padding-right: 10px; /* Отступ справа (по вашему усмотрению) */
+  padding-right: 5px; /* Уменьшенный отступ справа */
 }
-
 
 /* Отступ между левой и правой колонкой */
 .container-fluid {
   padding-left: 10px;
   padding-right: 10px;
 }
-
 
 .details-list {
   display: flex;
@@ -61,4 +59,13 @@
 .product-name {
   font-weight: normal; /* или используйте font-weight: normal!important; если требуется переопределение стилей */
   /* Другие стили по вашему усмотрению */
+}
+
+body {
+  width: 99.8%;
+  margin: 0;
+}
+
+.progress-bar {
+  background-color: #007bff; /* Цвет полосы прогресса */
 }

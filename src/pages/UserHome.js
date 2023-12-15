@@ -12,8 +12,45 @@ export default function UserHome() {
   }, []);
 
   const loadProducts = async () => {
-    const result = await axios.get('http://localhost:8080/products');
-    setProducts(result.data);
+    try {
+      const result = await axios.get('http://localhost:8080/products');
+      setProducts(result.data.map(product => ({
+        ...product,
+        details: [],
+        percentageOfApprovedDocuments: 0,
+        percentageOfApprovedDrawings: 0,
+      })));
+
+      // Вызов fetchData для каждого продукта при загрузке страницы
+      result.data.forEach((product) => fetchData(product.id));
+    } catch (error) {
+      console.error("Ошибка при загрузке данных:", error);
+    }
+  };
+
+  const fetchData = async (id) => {
+    try {
+      const detailsResult = await axios.get(`http://localhost:8080/details/product/${id}`);
+      const detailsData = detailsResult.data;
+
+      if (Array.isArray(detailsData.details)) {
+        // Обновите состояние для деталей и процентов для каждого продукта отдельно
+        setProducts((prevProducts) =>
+          prevProducts.map((product) =>
+            product.id === id
+              ? {
+                ...product,
+                details: detailsData.details,
+                percentageOfApprovedDocuments: detailsData.percentageOfApprovedDocuments,
+                percentageOfApprovedDrawings: detailsData.percentageOfApprovedDrawings,
+              }
+              : product
+          )
+        );
+      }
+    } catch (error) {
+      console.error("Ошибка при загрузке данных:", error);
+    }
   };
 
   const handleSearchChange = (event) => {
@@ -44,17 +81,35 @@ export default function UserHome() {
             </form>
           </div>
           {filteredProducts.map((product, index) => (
-            <div className='col-sm-6 col-md-4 col-lg-3' key={index} style={{ padding: '5px', height: '400px' }}>
+            <div className='col-sm-6 col-md-4 col-lg-3' key={index} style={{ padding: '5px', height: '420px' }}>
               <div className='card h-100 d-flex flex-column justify-content-between'>
                 <div className="text-center">
                   <img src={`http://localhost:8080${product.photosImagePath}`} className='card-img-top' alt='...' style={{ height: '270px', objectFit: 'cover' }} />
                 </div>
                 <div className='card-body'>
                   <h5 className='card-title'>{product.name}</h5>
+                  <div className="percentage-bar" style={{ width: '200px', height: '20px', borderRadius: '10px', border: '1px solid #ddd', overflow: 'hidden', position: 'relative', margin: 'auto' }}>
+                    <div
+                      className="filler"
+                      style={{
+                        width: `${((product.percentageOfApprovedDocuments + product.percentageOfApprovedDrawings) / 2).toFixed(2)}%`,
+                        height: '100%',
+                        background: 'linear-gradient(to right, #4CAF50, #45a049)',  // Градиент для заполнения
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                      }}
+                    />
+                    <div className="percentage-text" style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', color: '#333' }}>
+                      {((product.percentageOfApprovedDocuments + product.percentageOfApprovedDrawings) / 2).toFixed(2)}%
+                    </div>
+                  </div>
+
+
                 </div>
                 <div className='text-center' style={{ marginBottom: '20px' }}>
                   <Link className='btn btn-primary' to={`/userdetails/${product.id}`} style={{ width: '180px' }}>
-                    Просмотреть
+                    Просмотр
                   </Link>
                 </div>
               </div>
