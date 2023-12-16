@@ -34,6 +34,7 @@ export default function EditUser() {
         e.preventDefault();
         console.log("positionId:", user.positionId);
         await axios.put(`http://localhost:8080/user/${id}?positionId=${user.positionId}`, user);
+        alert('Данные успешно изменены!');
         navigate('/users');
     };
     

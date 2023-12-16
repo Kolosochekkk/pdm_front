@@ -32,6 +32,7 @@ export default function AddMaterial() {
 
         // Pass unitId in the request body when creating a new material
         await axios.post(`http://localhost:8080/material/${unitId}`, { ...material });
+        alert('Материал успешно добавлен!');
         navigate('/materials'); // Assuming there is a route to view materials
     };
 

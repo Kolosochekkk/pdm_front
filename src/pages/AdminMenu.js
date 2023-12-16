@@ -8,7 +8,7 @@ export default function AdminMenu() {
       <nav>
         <ul>
           <li>
-            <Link to="/products">Изделия</Link>
+            <Link to="/adminhome">Изделия</Link>
           </li>
           <li>
             <Link to="/details">Детали</Link>

@@ -6,7 +6,31 @@ import '../styles/Details.css';
 import 'jspdf-autotable';
 import { confirmAlert } from 'react-confirm-alert';
 import 'react-confirm-alert/src/react-confirm-alert.css';
+// Функция для получения текущего пользователя из localStorage
+export const getCurrentUser = () => {
+  const users = JSON.parse(localStorage.getItem('users')) || [];
+  const currentUser = users.find(user => user.isLoggedIn);
+  return currentUser || null;
+};
 
+// Функция для установки текущего пользователя в localStorage
+export const setCurrentUser = (user) => {
+  const users = JSON.parse(localStorage.getItem('users')) || [];
+
+  // Сброс isLoggedIn для всех пользователей
+  users.forEach(u => u.isLoggedIn = false);
+
+  const existingUser = users.find(u => u.id === user.id);
+
+  if (existingUser) {
+    existingUser.isLoggedIn = true;
+  } else {
+    user.isLoggedIn = true;
+    users.push(user);
+  }
+
+  localStorage.setItem('users', JSON.stringify(users));
+};
 
 const UserDetails = () => {
   const [product, setProduct] = useState({});
@@ -41,29 +65,39 @@ const UserDetails = () => {
   const [productDocumentVersion, setProductDocumentVersion] = useState(null);
   const [productPlanSelectedVersion, setProductPlanSelectedVersion] = useState(null);
   const [productPlanVersion, setProductPlanVersion] = useState(null);
+  const [searchDocumentTerm, setSearchDocumentTerm] = useState('');
+  const [searchDrawingTerm, setSearchDrawingTerm] = useState('');
 
-  const userData = JSON.parse(localStorage.getItem('user'));
-  const uploaderId = userData.id;
+
+  const userData2 = JSON.parse(localStorage.getItem('user'));
+  const uploaderId = userData2.id;
+  console.log(uploaderId);
 
   useEffect(() => {
     const loadProductAndDetails = async () => {
-      const productResult = await axios.get(`http://localhost:8080/product/${id}`);
-      setProduct(productResult.data);
-      const detailsResult = await axios.get(`http://localhost:8080/details/product/${id}`);
-      const detailsData = detailsResult.data;
+      try {
+        const productResult = await axios.get(`http://localhost:8080/product/${id}`);
+        setProduct(productResult.data);
 
-      // Проверка наличия ключа "details" и его типа
-      if (Array.isArray(detailsData.details)) {
-        // detailsData.details - это массив деталей
-        setDetails(detailsData.details);
+        const detailsResult = await axios.get(`http://localhost:8080/details/product/${id}`);
+        const detailsData = detailsResult.data;
+
+        if (Array.isArray(detailsData.details)) {
+          setDetails(detailsData.details);
+        }
+
+       // setSelectedProduct(productResult.data.id);
+        await handleProductClick(productResult.data.id);
+       // setShowDocuments(true);
+      } catch (error) {
+        console.error('Error loading product and details:', error);
       }
-
-      setSelectedProduct(productResult.data.id);
-      setShowDocuments(true);
     };
 
+    // Вызов функции loadProductAndDetails
     loadProductAndDetails();
-  }, [id]);
+  }, [id]); // Убедитесь, что [id] - это зависимость useEffect, если необходимо
+
 
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
@@ -437,6 +471,22 @@ const UserDetails = () => {
     }
   };
 
+  const handleSearchDocumentChange = (e) => {
+    setSearchDocumentTerm(e.target.value);
+  };
+
+  const handleSearchDrawingChange = (e) => {
+    setSearchDrawingTerm(e.target.value);
+  };
+
+  const filteredDocuments = documents.filter((document) =>
+    document.title.toLowerCase().includes(searchDocumentTerm.toLowerCase())
+  );
+
+  const filteredDrawings = plans.filter((plan) =>
+    plan.title.toLowerCase().includes(searchDrawingTerm.toLowerCase())
+  );
+
   return (
     <>
       <UserMenu />
@@ -454,23 +504,28 @@ const UserDetails = () => {
             />
             <h5 style={{ textAlign: 'left' }}>Изделие</h5>
             <h6
-              className={` product-name ${selectedProduct === product.id ? 'selected-detail' : ''}`}
+              className={`product-name ${selectedProduct === product.id ? 'selected-detail' : ''}`}
               onClick={() => {
                 handleProductClick(product.id);
                 setSelectedDetail(null);
               }}
+              style={{ display: 'flex', justifyContent: 'space-between' }}
             >
-              {product.name}
+              <span style={{ order: 1 }}>{product.name}</span>
+              <span style={{ order: 2 }}>{product.creationDate}</span>
             </h6>
+
             <h5 style={{ textAlign: 'left' }}>Детали</h5>
 
             {filteredDetails.length > 0 && (
               <div className="details-list">
-                <div className="detail-item header">
-                  <span>Наименование</span>
+                <div className="detail-item header" style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ marginRight: '5px' }}>Наименование </span>
                   <span>Обозначение</span>
-                  <span>Количество</span>
+                  <span>Кол-во</span>
+                  <span>Создана</span>
                 </div>
+
                 {filteredDetails.map((detail, index) => (
                   <div
                     key={index}
@@ -483,12 +538,12 @@ const UserDetails = () => {
                     <span>{detail.name}</span>
                     <span>{detail.designation}</span>
                     <span>{detail.quantity}</span>
+                    <span>{detail.creationDate}</span>
                   </div>
                 ))}
               </div>
             )}
           </div>
-
           <div className="col-md-9" style={{ padding: '10px' }}>
             <div className="d-flex mb-3">
               {selectedDetail && (
@@ -579,24 +634,50 @@ const UserDetails = () => {
                   </button>
                 </>
               )}
-
             </div>
+
             {showDocuments && selectedDetail && (
               <>
-                <select
-                  id="versionDropdown"
-                  className="form-select"
-                  value={selectedVersion}
-                  onChange={(e) => setSelectedVersion(e.target.value)}
-                  style={{ width: '185px', textAlignLast: 'center' }}
-                >
-                  <option value="">Выберите версию</option>
-                  {detailDocumentVersion && detailDocumentVersion.map((version, index) => (
-                    <option key={index} value={version}>
-                      Версия {version}
-                    </option>
-                  ))}
-                </select>
+                <div className="d-flex align-items-center">
+                  {/* Поиск документов */}
+                  <div style={{ marginRight: '10px', display: 'flex', alignItems: 'center' }}>
+                    <input
+                      className="form-control mb-2"
+                      type="search"
+                      placeholder="Поиск по названию"
+                      aria-label="Search Document"
+                      value={searchDocumentTerm}
+                      onChange={handleSearchDocumentChange}
+                      style={{ fontSize: '14px', width: '170px' }}
+                    />
+                  </div>
+                  {/* Выпадающий список версий */}
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <select
+                      id="versionDropdown"
+                      className="form-select"
+                      value={selectedVersion}
+                      onChange={(e) => setSelectedVersion(e.target.value)}
+                      style={{ width: '185px', textAlignLast: 'center' }}
+                    >
+                      <option value="">Выберите версию</option>
+                      {detailDocumentVersion &&
+                        detailDocumentVersion.map((version, index) => (
+                          <option key={index} value={version}>
+                            Версия {version}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                  {/* Добавить кнопку "Добавить документ" с отступом */}
+                  <Link
+                    className="btn"
+                    style={{ backgroundColor: 'black', color: 'white', marginLeft: 'auto' }}
+                    to={`/adddocumentation`}
+                  >
+                    Добавить документ
+                  </Link>
+                </div>
                 <table className="table">
                   <thead>
                     <tr>
@@ -611,25 +692,37 @@ const UserDetails = () => {
                   </thead>
                   <tbody>
                     {documents
-                      .filter((document) => !selectedVersion || Number(document.version) === Number(selectedVersion))
+                      .filter((document) => (
+                        (!selectedVersion || Number(document.version) === Number(selectedVersion)) &&
+                        (searchDocumentTerm === '' || document.title.toLowerCase().includes(searchDocumentTerm.toLowerCase()))
+                      ))
                       .map((document, index) => (
-                        <tr key={index}>
-                          <th scope="row">{index + 1}</th>
-                          <td>{document.title}</td>
-                          <td>{document.status}</td>
-                          <td>{document.version ? document.version : 'No detail'}</td>
-                          <td>{document.uploader.surname}</td>
-                          <td>{document.approver.surname}</td>
-                          <td>
-                            <Link className="btn btn-primary mx-2" to={`/viewdocumentation/${document.id}`}>
-                              Просмотр
-                            </Link>
-                            <button className="btn btn-success mx-2" onClick={() => downloadDocument(document)}>
-                              Скачать
-                            </button>
-                            {document.uploader.id === uploaderId && (
-                              <>
-                                {document.status === 'На доработку' && (
+                        <React.Fragment key={index}>
+                          {document.uploader.id === uploaderId && (
+                            <tr key={index}>
+                              <th scope="row">{index + 1}</th>
+                              <td>{document.title}</td>
+                              <td>{document.status}</td>
+                              <td>{document.version ? document.version : 'No detail'}</td>
+                              <td>{document.uploader.surname}</td>
+                              <td>{document.approver.surname}</td>
+                              <td className="text-start">
+                                <Link
+                                  className="btn btn-primary mx-2"
+                                  to={`/viewdocumentation/${document.id}`}
+                                >
+                                  Просмотр
+                                </Link>
+                                {/* <button className="btn btn-success mx-2" onClick={() => downloadDocument(document)}>
+                                Скачать
+                                </button> */}
+                                <button
+                                  className="btn btn-danger mx-2"
+                                  onClick={() => deleteDetailDocument(document.id)}
+                                >
+                                  Удалить
+                                </button>
+                                {document.status === 'На доработке' && (
                                   <button
                                     className="btn btn-info mx-2"
                                     onClick={() => handleOpenCommentModal(document.id)}
@@ -637,13 +730,10 @@ const UserDetails = () => {
                                     Комментарий
                                   </button>
                                 )}
-                                <button className="btn btn-danger mx-2" onClick={() => deleteDetailDocument(document.id)}>
-                                  Удалить
-                                </button>
-                              </>
-                            )}
-                          </td>
-                        </tr>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
                       ))}
                   </tbody>
                 </table>
@@ -652,20 +742,46 @@ const UserDetails = () => {
 
             {showDocuments && selectedProduct && (
               <>
-                <select
-                  id="versionDropdown"
-                  className="form-select"
-                  value={productDocumentSelectedVersion}
-                  onChange={(e) => setProductDocumentSelectedVersion(e.target.value)}
-                  style={{ width: '185px', textAlignLast: 'center' }}
-                >
-                  <option value="">Выберите версию</option>
-                  {productDocumentVersion && productDocumentVersion.map((version, index) => (
-                    <option key={index} value={version}>
-                      Версия {version}
-                    </option>
-                  ))}
-                </select>
+                <div className="d-flex align-items-center">
+                  {/* Поиск документов */}
+                  <div style={{ marginRight: '10px', display: 'flex', alignItems: 'center' }}>
+                    <input
+                      className="form-control mb-2"
+                      type="search"
+                      placeholder="Поиск по названию"
+                      aria-label="Search Document"
+                      value={searchDocumentTerm}
+                      onChange={handleSearchDocumentChange}
+                      style={{ fontSize: '14px', width: '170px' }}
+                    />
+                  </div>
+                  {/* Выпадающий список версий */}
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <select
+                      id="productVersionDropdown"
+                      className="form-select"
+                      value={productDocumentSelectedVersion}
+                      onChange={(e) => setProductDocumentSelectedVersion(e.target.value)}
+                      style={{ width: '185px', textAlignLast: 'center' }}
+                    >
+                      <option value="">Выберите версию</option>
+                      {productDocumentVersion &&
+                        productDocumentVersion.map((version, index) => (
+                          <option key={index} value={version}>
+                            Версия {version}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                  {/* Добавить кнопку "Добавить документ" с отступом */}
+                  <Link
+                    className="btn"
+                    style={{ backgroundColor: 'black', color: 'white', marginLeft: 'auto' }}
+                    to={`/addproductdocumentation`}
+                  >
+                    Добавить документ
+                  </Link>
+                </div>
                 <table className="table">
                   <thead>
                     <tr>
@@ -680,25 +796,34 @@ const UserDetails = () => {
                   </thead>
                   <tbody>
                     {documents
-                      .filter((document) => !productDocumentSelectedVersion || Number(document.version) === Number(productDocumentSelectedVersion))
+                      .filter((document) => (
+                        (!productDocumentSelectedVersion || Number(document.version) === Number(productDocumentSelectedVersion)) &&
+                        (searchDocumentTerm === '' || document.title.toLowerCase().includes(searchDocumentTerm.toLowerCase()))
+                      ))
                       .map((document, index) => (
-                        <tr key={index}>
-                          <th scope="row">{index + 1}</th>
-                          <td>{document.title}</td>
-                          <td>{document.status}</td>
-                          <td>{document.version ? document.version : 'No detail'}</td>
-                          <td>{document.uploader.surname}</td>
-                          <td>{document.approver.surname}</td>
-                          <td>
-                            <Link className="btn btn-primary mx-2" to={`/viewdocumentation/${document.id}`}>
-                              Просмотр
-                            </Link>
-                            <button className="btn btn-success mx-2" onClick={() => downloadDocument(document)}>
-                              Скачать
-                            </button>
-                            {document.uploader.id === uploaderId && (
-                              <>
-                                {document.status === 'На доработку' && (
+                        <React.Fragment key={index}>
+                          {document.uploader.id === uploaderId && (
+                            <tr key={index}>
+                              <th scope="row">{index + 1}</th>
+                              <td>{document.title}</td>
+                              <td>{document.status}</td>
+                              <td>{document.version ? document.version : 'No detail'}</td>
+                              <td>{document.uploader.surname}</td>
+                              <td>{document.approver.surname}</td>
+                              <td>
+                                <Link
+                                  className="btn btn-primary mx-2"
+                                  to={`/viewdocumentation/${document.id}`}
+                                >
+                                  Просмотр
+                                </Link>
+                                <button
+                                  className="btn btn-danger mx-2"
+                                  onClick={() => deleteProductDocument(document.id)}
+                                >
+                                  Удалить
+                                </button>
+                                {document.status === 'На доработке' && (
                                   <button
                                     className="btn btn-info mx-2"
                                     onClick={() => handleOpenCommentModal(document.id)}
@@ -706,13 +831,10 @@ const UserDetails = () => {
                                     Комментарий
                                   </button>
                                 )}
-                                <button className="btn btn-danger mx-2" onClick={() => deleteProductDocument(document.id)}>
-                                  Удалить
-                                </button>
-                              </>
-                            )}
-                          </td>
-                        </tr>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
                       ))}
                   </tbody>
                 </table>
@@ -721,20 +843,37 @@ const UserDetails = () => {
 
             {showPlans && selectedDetail && (
               <>
-                <select
-                  id="versionDropdown"
-                  className="form-select"
-                  value={detailPlanSelectedVersion}
-                  onChange={(e) => setDetailPlanSelectedVersion(e.target.value)}
-                  style={{ width: '185px', textAlignLast: 'center' }}
-                >
-                  <option value="">Выберите версию</option>
-                  {detailPlanVersion && detailPlanVersion.map((version, index) => (
-                    <option key={index} value={version}>
-                      Версия {version}
-                    </option>
-                  ))}
-                </select>
+                <div className="d-flex align-items-center">
+                  <div style={{ marginRight: '10px', display: 'flex', alignItems: 'center' }}>
+                    <input
+                      className="form-control mb-2"
+                      type="search"
+                      placeholder="Поиск по названию"
+                      aria-label="Search Drawing"
+                      value={searchDrawingTerm}
+                      onChange={handleSearchDrawingChange}
+                      style={{ fontSize: '14px', width: '170px' }}
+                    />
+                  </div>
+                  <select
+                    id="versionDropdown"
+                    className="form-select"
+                    value={detailPlanSelectedVersion}
+                    onChange={(e) => setDetailPlanSelectedVersion(e.target.value)}
+                    style={{ width: '185px', textAlignLast: 'center' }}
+                  >
+                    <option value="">Выберите версию</option>
+                    {detailPlanVersion &&
+                      detailPlanVersion.map((version, index) => (
+                        <option key={index} value={version}>
+                          Версия {version}
+                        </option>
+                      ))}
+                  </select>
+                  <Link className="btn" style={{ backgroundColor: 'black', color: 'white', marginLeft: 'auto' }} to={`/addplan`}>
+                    Добавить чертеж
+                  </Link>
+                </div>
                 <table className="table">
                   <thead>
                     <tr>
@@ -748,23 +887,27 @@ const UserDetails = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {plans.filter((plan) => !detailPlanSelectedVersion || Number(plan.version) === Number(detailPlanSelectedVersion))
+                    {plans
+                      .filter(
+                        (plan) =>
+                          (!detailPlanSelectedVersion || Number(plan.version) === Number(detailPlanSelectedVersion)) &&
+                          (searchDrawingTerm === '' || plan.title.toLowerCase().includes(searchDrawingTerm.toLowerCase()))
+                      )
                       .map((plan, index) => (
-
-                        <tr key={index}>
-                          <th scope="row">{index + 1}</th>
-                          <td>{plan.title}</td>
-                          <td>{plan.status}</td>
-                          <td>{plan.version ? plan.version : 'No detail'}</td>
-                          <td>{plan.uploader.surname}</td>
-                          <td>{plan.approver.surname}</td>
-                          <td>
-                            <button className="btn btn-primary mx-2" onClick={() => viewPlan(plan)}>
-                              Просмотр
-                            </button>
-                            {plan.uploader.id === uploaderId && (
-                              <>
-                                {plan.status === 'На доработку' && (
+                        <React.Fragment key={index}>
+                          {plan.uploader.id === uploaderId && (
+                            <tr key={index}>
+                              <th scope="row">{index + 1}</th>
+                              <td>{plan.title}</td>
+                              <td>{plan.status}</td>
+                              <td>{plan.version ? plan.version : 'No detail'}</td>
+                              <td>{plan.uploader.surname}</td>
+                              <td>{plan.approver.surname}</td>
+                              <td>
+                                <button className="btn btn-primary mx-2" onClick={() => viewPlan(plan)}>
+                                  Просмотр
+                                </button>
+                                {plan.status === 'На доработке' && (
                                   <button
                                     className="btn btn-info mx-2"
                                     onClick={() => handleOpenPlanCommentModal(plan.id)}
@@ -775,31 +918,50 @@ const UserDetails = () => {
                                 <button className="btn btn-danger mx-2" onClick={() => deleteDetailPlan(plan.id)}>
                                   Удалить
                                 </button>
-                              </>
-                            )}
-                          </td>
-                        </tr>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
                       ))}
                   </tbody>
                 </table>
               </>
             )}
+
             {showPlans && selectedProduct && (
               <>
-                <select
-                  id="versionDropdown"
-                  className="form-select"
-                  value={productPlanSelectedVersion}
-                  onChange={(e) => setProductPlanSelectedVersion(e.target.value)}
-                  style={{ width: '185px', textAlignLast: 'center' }}
-                >
-                  <option value="">Выберите версию</option>
-                  {productPlanVersion && productPlanVersion.map((version, index) => (
-                    <option key={index} value={version}>
-                      Версия {version}
-                    </option>
-                  ))}
-                </select>
+                <div className="d-flex align-items-center">
+                  <div style={{ marginRight: '10px', display: 'flex', alignItems: 'center' }}>
+                    <input
+                      className="form-control mb-2"
+                      type="search"
+                      placeholder="Поиск по названию"
+                      aria-label="Search Drawing"
+                      value={searchDrawingTerm}
+                      onChange={handleSearchDrawingChange}
+                      style={{ fontSize: '14px', width: '170px' }}
+                    />
+                  </div>
+                  <select
+                    id="versionDropdown"
+                    className="form-select"
+                    value={productPlanSelectedVersion}
+                    onChange={(e) => setProductPlanSelectedVersion(e.target.value)}
+                    style={{ width: '185px', textAlignLast: 'center' }}
+                  >
+                    <option value="">Выберите версию</option>
+                    {productPlanVersion && productPlanVersion.map((version, index) => (
+                      <option key={index} value={version}>
+                        Версия {version}
+                      </option>
+                    ))}
+                  </select>
+                  <div style={{ marginLeft: 'auto' }}>
+                    <Link className="btn" style={{ backgroundColor: 'black', color: 'white', marginLeft: 'auto' }} to={`/addproductplan`}>
+                      Добавить чертеж
+                    </Link>
+                  </div>
+                </div>
                 <table className="table">
                   <thead>
                     <tr>
@@ -813,22 +975,30 @@ const UserDetails = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {plans.filter((plan) => !productPlanSelectedVersion || Number(plan.version) === Number(productPlanSelectedVersion))
+                    {plans
+                      .filter(
+                        (plan) =>
+                          !productPlanSelectedVersion || Number(plan.version) === Number(productPlanSelectedVersion)
+                      )
+                      .filter((plan) => searchDrawingTerm === '' || plan.title.toLowerCase().includes(searchDrawingTerm.toLowerCase()))
                       .map((plan, index) => (
-                        <tr key={index}>
-                          <th scope="row">{index + 1}</th>
-                          <td>{plan.title}</td>
-                          <td>{plan.status}</td>
-                          <td>{plan.version ? plan.version : 'No detail'}</td>
-                          <td>{plan.uploader.surname}</td>
-                          <td>{plan.approver.surname}</td>
-                          <td>
-                            <button className="btn btn-primary mx-2" onClick={() => viewPlan(plan)}>
-                              Просмотр
-                            </button>
-                            {plan.uploader.id === uploaderId && (
-                              <>
-                                {plan.status === 'На доработку' && (
+                        <React.Fragment key={index}>
+                          {plan.uploader.id === uploaderId && (
+                            <tr key={index}>
+                              <th scope="row">{index + 1}</th>
+                              <td>{plan.title}</td>
+                              <td>{plan.status}</td>
+                              <td>{plan.version ? plan.version : 'No detail'}</td>
+                              <td>{plan.uploader.surname}</td>
+                              <td>{plan.approver.surname}</td>
+                              <td>
+                                <button className="btn btn-primary mx-2" onClick={() => viewPlan(plan)}>
+                                  Просмотр
+                                </button>
+                                <button className="btn btn-danger mx-2" onClick={() => deleteProductPlan(plan.id)}>
+                                  Удалить
+                                </button>
+                                {plan.status === 'На доработке' && (
                                   <button
                                     className="btn btn-info mx-2"
                                     onClick={() => handleOpenPlanCommentModal(plan.id)}
@@ -836,13 +1006,10 @@ const UserDetails = () => {
                                     Комментарий
                                   </button>
                                 )}
-                                <button className="btn btn-danger mx-2" onClick={() => deleteProductPlan(plan.id)}>
-                                  Удалить
-                                </button>
-                              </>
-                            )}
-                          </td>
-                        </tr>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
                       ))}
                   </tbody>
                 </table>
@@ -939,7 +1106,7 @@ const UserDetails = () => {
                       <th scope="col">Количество</th>
                       <th scope="col">Материал</th>
                       <th scope="col">Ед.измерения</th>
-                      <th scope="col">Количество материала</th>
+                      <th scope="col">Расход материала</th>
                       <th scope="col">Действия</th>
                     </tr>
                   </thead>
@@ -998,26 +1165,26 @@ const UserDetails = () => {
 
             {modalVisible && selectedPlan && <ImageViewerModal plan={selectedPlan} onClose={() => setModalVisible(false)} />}
 
-            {showAddDocumentButton && showDocuments && selectedDetail && (
-              <Link className="btn" style={{ backgroundColor: 'black', color: 'white' }} to={`/adddocumentation`}>
+            {/* {showAddDocumentButton && showDocuments && selectedDetail && (
+              <Link className="btn" style={{ backgroundColor: 'black', color: 'white', marginLeft: 'auto' }} to={`/adddocumentation`}>
                 Добавить документ
               </Link>
             )}
             {showAddPlanButton && showPlans && selectedDetail && (
-              <Link className="btn" style={{ backgroundColor: 'black', color: 'white' }} to={`/addplan`}>
+              <Link className="btn" style={{ backgroundColor: 'black', color: 'white', marginLeft: 'auto' }} to={`/addplan`}>
                 Добавить чертеж
               </Link>
             )}
             {showAddProductDocumentButton && showDocuments && selectedProduct && (
-              <Link className="btn" style={{ backgroundColor: 'black', color: 'white' }} to={`/addproductdocumentation`}>
+              <Link className="btn" style={{ backgroundColor: 'black', color: 'white', marginLeft: 'auto' }} to={`/addproductdocumentation`}>
                 Добавить документ
               </Link>
             )}
             {showAddProductPlanButton && showPlans && selectedProduct && (
-              <Link className="btn" style={{ backgroundColor: 'black', color: 'white' }} to={`/addproductplan`}>
+              <Link className="btn" style={{ backgroundColor: 'black', color: 'white', marginLeft: 'auto' }} to={`/addproductplan`}>
                 Добавить чертеж
               </Link>
-            )}
+            )} */}
           </div>
         </div>
       </div>

@@ -1,21 +1,29 @@
 import axios from 'axios';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { confirmAlert } from 'react-confirm-alert';
 import 'react-confirm-alert/src/react-confirm-alert.css';
 
-
 export default function AddProduct() {
   const navigate = useNavigate();
-  const [setFile] = useState(null);
+  const [file, setFile] = useState(null);
   const [product, setProduct] = useState({
     name: '',
+    creationDate: new Date().toISOString().split('T')[0], // Только дата, без времени
   });
 
   const { name } = product;
 
   const onInputChange = (e) => {
     setProduct({ ...product, [e.target.name]: e.target.value });
+  };
+
+  useEffect(() => {
+    setProduct({ ...product, creationDate: new Date().toISOString().split('T')[0] });
+  }, []);
+
+  const onCancelClick = () => {
+    navigate(-1);
   };
 
   const onSubmit = async (e) => {
@@ -30,16 +38,16 @@ export default function AddProduct() {
         'Content-Type': 'multipart/form-data',
       },
     });
-
-    navigate('/products');
+    alert('Изделие успешно добавлено!');
+    navigate(-1);
   };
 
   const onFileChange = async (e) => {
     const selectedFile = e.target.files[0];
-  
+
     if (selectedFile) {
       const allowedImageFormats = ['image/png', 'image/jpeg', 'image/bmp', 'image/tiff'];
-  
+
       if (!allowedImageFormats.includes(selectedFile.type)) {
         await new Promise((resolve) => {
           confirmAlert({
@@ -97,9 +105,9 @@ export default function AddProduct() {
             <button type="submit" className="btn btn-outline-primary">
               Добавить
             </button>
-            <Link className="btn btn-outline-danger mx-2" to="/products">
+            <button type='button' className='btn btn-outline-danger mx-2' onClick={onCancelClick}>
               Отмена
-            </Link>
+            </button>
           </form>
         </div>
       </div>

@@ -43,6 +43,7 @@ export default function AddUser() {
 
         // Передайте positionId на сервер при создании нового пользователя
         await axios.post(`http://localhost:8080/user/${positionId}`, user);
+        alert('Пользователь успешно добавлен!');
         navigate('/users');
     };
 

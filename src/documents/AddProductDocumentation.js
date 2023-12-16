@@ -104,7 +104,7 @@ const AddProductDocumentation = () => {
           'Content-Type': 'multipart/form-data',
         },
       });
-
+      alert('Документ успешно добавлен!');
       navigate(-1);
     } catch (error) {
       console.error('Error adding documentation:', error);
@@ -194,7 +194,7 @@ const AddProductDocumentation = () => {
                 </option>
                 {users.map((user) => (
                   <option key={user.id} value={user.id}>
-                    {user.username}
+                    {user.surname} {user.name}
                   </option>
                 ))}
               </select>

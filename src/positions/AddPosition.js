@@ -19,6 +19,7 @@ const AddPosition = () => {
     e.preventDefault();
     try {
       await axios.post('http://localhost:8080/position', position);
+      alert('Должность успешно добавлена!');
       navigate('/positions');
     } catch (error) {
       console.error('Error adding position:', error);

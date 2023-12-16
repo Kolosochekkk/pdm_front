@@ -10,8 +10,8 @@ export default function UpdateDetail() {
     const [detail, setDetail] = useState({
         name: '',
         designation: '',
-        productId: '',
-        materialId: '',
+        productId: null,
+        materialId: null,
         quantity: '',
         materialQuantity: '',
     });
@@ -44,18 +44,23 @@ export default function UpdateDetail() {
 
     const onSubmit = async (e) => {
         e.preventDefault();
-
-        // Обновление данных детали с использованием запроса PUT и параметров запроса
-        await axios.put(`http://localhost:8080/detail/${id}?productId=${productId}&materialId=${materialId}`, {
+    
+        // Обновите тело запроса, чтобы включить productId и materialId
+        const requestBody = {
             name,
             designation,
             product: { id: productId },
             material: { id: materialId },
             quantity,
             materialQuantity
-        });
+        };
+    
+        // Обновление данных детали с использованием запроса PUT и передачей данных в теле запроса
+        await axios.put(`http://localhost:8080/detail/${id}`, requestBody);
+        alert('Данные успешно изменены!');
         navigate(-1);
     };
+    
 
     const onCancelClick = () => {
         navigate(-1);
@@ -92,7 +97,7 @@ export default function UpdateDetail() {
                             />
                         </div>
 
-                        {/* <div className='mb-3'>
+                        <div className='mb-3'>
                             <label htmlFor='Product' className='form-label'>Изделие</label>
                             <select
                                 className='form-control'
@@ -105,7 +110,7 @@ export default function UpdateDetail() {
                                     <option key={product.id} value={product.id}>{product.name}</option>
                                 ))}
                             </select>
-                        </div> */}
+                        </div>
                         <div className='mb-3'>
                             <label htmlFor='Quantity' className='form-label'>Количество</label>
                             <input
@@ -117,7 +122,7 @@ export default function UpdateDetail() {
                                 onChange={(e) => onInputChange(e)}
                             />
                         </div>
-                        {/* <div className='mb-3'>
+                        <div className='mb-3'>
                             <label htmlFor='Material' className='form-label'>Материал</label>
                             <select
                                 className='form-control'
@@ -130,7 +135,7 @@ export default function UpdateDetail() {
                                     <option key={material.id} value={material.id}>{material.name}</option>
                                 ))}
                             </select>
-                        </div> */}
+                        </div>
                         <div className='mb-3'>
                             <label htmlFor='MaterialQuantity' className='form-label'>Количество материала</label>
                             <input

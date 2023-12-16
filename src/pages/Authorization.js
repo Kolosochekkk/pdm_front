@@ -19,7 +19,7 @@ function Login() {
           navigate('/users');
         } else if (response.data.roles.includes('ADMIN')) {
           localStorage.setItem('user', JSON.stringify(response.data));
-          navigate('/home');
+          navigate('/adminhome');
         } else {
           localStorage.setItem('user', JSON.stringify(response.data));
           navigate('/userhome');

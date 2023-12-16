@@ -32,7 +32,7 @@ export default function EditProduct() {
         'Content-Type': 'multipart/form-data',
       },
     });
-
+    alert('Данные успешно изменены!');
     navigate('/products');
   };
 

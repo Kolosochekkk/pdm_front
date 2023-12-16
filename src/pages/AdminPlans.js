@@ -157,7 +157,6 @@ const AdminPlans = () => {
                 </div>
             </div>
 
-            {/* Модальное окно */}
             <Modal show={showModal} onHide={handleModalClose}>
                 <Modal.Header closeButton>
                     <Modal.Title>Отправить на доработку</Modal.Title>

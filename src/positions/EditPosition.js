@@ -29,6 +29,7 @@ const EditPosition = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     await axios.put(`http://localhost:8080/position/${id}`, position);
+    alert('Данные успешно изменены!');
     navigate('/positions');
   };
 

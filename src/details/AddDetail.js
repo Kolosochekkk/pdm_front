@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 export default function AddDetail() {
-    let navigate = useNavigate();
+    const navigate = useNavigate();
 
     const [detail, setDetail] = useState({
         name: '',
@@ -12,6 +12,7 @@ export default function AddDetail() {
         materialId: '',
         quantity: '',
         materialQuantity: '',
+        creationDate: ''
     });
 
     const [products, setProducts] = useState([]);
@@ -21,7 +22,6 @@ export default function AddDetail() {
     const uploaderId = userData.id;
 
     useEffect(() => {
-        // Загрузка изделий и материалов с сервера при монтировании компонента
         axios.get('http://localhost:8080/products')
             .then(response => setProducts(response.data))
             .catch(error => console.error('Ошибка при загрузке изделий:', error));
@@ -31,7 +31,7 @@ export default function AddDetail() {
             .catch(error => console.error('Ошибка при загрузке материалов:', error));
     }, []);
 
-    const { name, designation, productId, materialId, quantity, materialQuantity } = detail;
+    const { name, designation, productId, materialId, quantity, materialQuantity, creationDate } = detail;
 
     const onInputChange = (e) => {
         setDetail({ ...detail, [e.target.name]: e.target.value });
@@ -40,10 +40,18 @@ export default function AddDetail() {
     const onSubmit = async (e) => {
         e.preventDefault();
 
-        // Передача как productId, так и materialId в теле запроса при создании новой детали
         await axios.post(`http://localhost:8080/detail/${productId}/${materialId}/${uploaderId}`, { ...detail });
-        navigate('/details'); // Предполагается, что есть маршрут для просмотра деталей
+        alert('Деталь успешно добавлена!');
+        navigate(-1);
     };
+
+    const onCancelClick = () => {
+        navigate(-1);
+    };
+
+    useEffect(() => {
+        setDetail({ ...detail, creationDate: new Date().toISOString().split('T')[0] });
+    }, []);
 
     return (
         <div className='container'>
@@ -90,7 +98,7 @@ export default function AddDetail() {
                                 ))}
                             </select>
                         </div>
-                        <div className='mb-3'>
+                        {/* <div className='mb-3'>
                             <label htmlFor='Quantity' className='form-label'>Количество</label>
                             <input
                                 type='number'
@@ -101,7 +109,7 @@ export default function AddDetail() {
                                 onChange={(e) => onInputChange(e)}
                                 required
                             />
-                        </div>
+                        </div> */}
                         <div className='mb-3'>
                             <label htmlFor='Material' className='form-label'>Материал</label>
                             <select
@@ -116,7 +124,7 @@ export default function AddDetail() {
                                 ))}
                             </select>
                         </div>
-                        <div className='mb-3'>
+                        {/* <div className='mb-3'>
                             <label htmlFor='MaterialQuantity' className='form-label'>Количество материала</label>
                             <input
                                 type='number'
@@ -127,13 +135,13 @@ export default function AddDetail() {
                                 onChange={(e) => onInputChange(e)}
                                 required
                             />
-                        </div>
+                        </div> */}
                         <button type='submit' className='btn btn-outline-dark'>
                             Добавить
                         </button>
-                        <Link className='btn btn-outline-danger mx-2' to='/details'>
+                        <button type='button' className='btn btn-outline-danger mx-2' onClick={onCancelClick}>
                             Отмена
-                        </Link>
+                        </button>
                     </form>
                 </div>
             </div>
